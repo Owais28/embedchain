@@ -154,7 +154,7 @@ class QdrantDB(BaseVectorDB):
 
         for i in tqdm(range(1, len(qdrant_ids), self.BATCH_SIZE), desc="Adding data in batches"):
             percentage = (i) / len(qdrant_ids) * 100  # Calculate percentage
-            observer.update()  # Update observer with integer percentage
+            observer.update(percentage)  # Update observer with integer percentage
             new_index = i - 1
             self.client.upsert(
                 collection_name=self.collection_name,
