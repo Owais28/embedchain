@@ -143,7 +143,6 @@ class QdrantDB(BaseVectorDB):
         :type ids: list[str]
         """
         embeddings = self.embedder.embedding_fn(documents)
-        observer =  Observer(len(qdrant_ids))
 
         payloads = []
         qdrant_ids = []
@@ -152,15 +151,15 @@ class QdrantDB(BaseVectorDB):
             qdrant_ids.append(str(uuid.uuid4()))
             payloads.append({"identifier": id, "text": document, "metadata": copy.deepcopy(metadata)})
 
+        observer =  Observer(len(qdrant_ids))
         for i in tqdm(range(1, len(qdrant_ids), self.BATCH_SIZE), desc="Adding data in batches"):
-            observer.update(i)  # Update observer with integer 
-            new_index = i - 1
+            observer.update(i+1)  # Update observer with integer 
             self.client.upsert(
                 collection_name=self.collection_name,
                 points=Batch(
-                    ids=qdrant_ids[new_index : new_index + self.BATCH_SIZE],
-                    payloads=payloads[new_index : new_index + self.BATCH_SIZE],
-                    vectors=embeddings[new_index : new_index + self.BATCH_SIZE],
+                    ids=qdrant_ids[i : i + self.BATCH_SIZE],
+                    payloads=payloads[i : i + self.BATCH_SIZE],
+                    vectors=embeddings[i : i + self.BATCH_SIZE],
                 ),
                 **kwargs,
             )
