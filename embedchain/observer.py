@@ -7,5 +7,5 @@ class Observer():
   def update(self,data: int):
     self.progress += data
     percentage = (self.progress) / self.total * 100  # Calculate percentage
-    print('Update: ', self.progress)
+    print('Update: ', percentage)
     

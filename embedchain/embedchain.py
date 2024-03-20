@@ -176,6 +176,7 @@ class EmbedChain(JSONSerializable):
         documents, metadatas, _ids, new_chunks = self._load_and_embed(
             data_formatter.loader, data_formatter.chunker, source, metadata, source_hash, config, dry_run, **kwargs
         )
+        print('Source from here:', source)
         if data_type in {DataType.DOCS_SITE}:
             self.is_docs_site_instance = True
 
