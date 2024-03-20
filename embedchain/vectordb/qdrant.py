@@ -153,7 +153,8 @@ class QdrantDB(BaseVectorDB):
             payloads.append({"identifier": id, "text": document, "metadata": copy.deepcopy(metadata)})
 
         for i in tqdm(range(0, len(qdrant_ids), self.BATCH_SIZE), desc="Adding data in batches"):
-            observer.update(i)
+            percentage = (i + 1) / len(qdrant_ids) * 100  # Calculate percentage
+            observer.update(int(percentage))  # Update observer with integer percentage
             self.client.upsert(
                 collection_name=self.collection_name,
                 points=Batch(
