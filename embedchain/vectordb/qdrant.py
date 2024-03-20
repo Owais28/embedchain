@@ -152,15 +152,16 @@ class QdrantDB(BaseVectorDB):
             qdrant_ids.append(str(uuid.uuid4()))
             payloads.append({"identifier": id, "text": document, "metadata": copy.deepcopy(metadata)})
 
-        for i in tqdm(range(0, len(qdrant_ids), self.BATCH_SIZE), desc="Adding data in batches"):
-            percentage = (i + self.BATCH_SIZE) / len(qdrant_ids) * 100  # Calculate percentage
-            observer.update(int(percentage))  # Update observer with integer percentage
+        for i in tqdm(range(1, len(qdrant_ids), self.BATCH_SIZE), desc="Adding data in batches"):
+            percentage = (i) / len(qdrant_ids) * 100  # Calculate percentage
+            observer.update()  # Update observer with integer percentage
+            new_index = i - 1
             self.client.upsert(
                 collection_name=self.collection_name,
                 points=Batch(
-                    ids=qdrant_ids[i : i + self.BATCH_SIZE],
-                    payloads=payloads[i : i + self.BATCH_SIZE],
-                    vectors=embeddings[i : i + self.BATCH_SIZE],
+                    ids=qdrant_ids[new_index : new_index + self.BATCH_SIZE],
+                    payloads=payloads[new_index : new_index + self.BATCH_SIZE],
+                    vectors=embeddings[new_index : new_index + self.BATCH_SIZE],
                 ),
                 **kwargs,
             )
