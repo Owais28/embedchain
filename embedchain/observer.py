@@ -1,6 +1,6 @@
 class Observer():
   
-  def __init__(self, total: int):
+  def __init__(self, total: any):
     self.total: int = total
     self.progress = 0 
     
