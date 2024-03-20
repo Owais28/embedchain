@@ -1,3 +1,3 @@
 class Observer():
-  def update(data: int):
+  def update(self,data: int):
     print('Update: ', data)
