@@ -3,6 +3,8 @@ import os
 import uuid
 from typing import Any, Optional, Union
 
+from embedchain.observer import Observer
+
 try:
     from qdrant_client import QdrantClient
     from qdrant_client.http import models
@@ -141,6 +143,7 @@ class QdrantDB(BaseVectorDB):
         :type ids: list[str]
         """
         embeddings = self.embedder.embedding_fn(documents)
+        observer =  Observer()
 
         payloads = []
         qdrant_ids = []
@@ -150,6 +153,7 @@ class QdrantDB(BaseVectorDB):
             payloads.append({"identifier": id, "text": document, "metadata": copy.deepcopy(metadata)})
 
         for i in tqdm(range(0, len(qdrant_ids), self.BATCH_SIZE), desc="Adding data in batches"):
+            observer.update(i)
             self.client.upsert(
                 collection_name=self.collection_name,
                 points=Batch(
