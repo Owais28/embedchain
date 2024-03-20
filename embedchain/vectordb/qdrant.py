@@ -132,6 +132,8 @@ class QdrantDB(BaseVectorDB):
         documents: list[str],
         metadatas: list[object],
         ids: list[str],
+        src: Any,
+        observer: Observer,
         **kwargs: Optional[dict[str, any]],
     ):
         """add data in vector database
@@ -151,9 +153,8 @@ class QdrantDB(BaseVectorDB):
             qdrant_ids.append(str(uuid.uuid4()))
             payloads.append({"identifier": id, "text": document, "metadata": copy.deepcopy(metadata)})
 
-        observer =  Observer(len(qdrant_ids))
-        for i in tqdm(range(1, len(qdrant_ids), self.BATCH_SIZE), desc="Adding data in batches"):
-            observer.update(i+1)  # Update observer with integer 
+        for i in tqdm(range(0, len(qdrant_ids), self.BATCH_SIZE), desc="Adding data in batches"):
+            observer.update_progress(str(src), i+1)  # Update observer with integer 
             self.client.upsert(
                 collection_name=self.collection_name,
                 points=Batch(

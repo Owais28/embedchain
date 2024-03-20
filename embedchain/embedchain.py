@@ -20,6 +20,7 @@ from embedchain.llm.base import BaseLlm
 from embedchain.loaders.base_loader import BaseLoader
 from embedchain.models.data_type import (DataType, DirectDataType,
                                          IndirectDataType, SpecialDataType)
+from embedchain.observer import Observer
 from embedchain.utils.misc import detect_datatype, is_valid_json_string
 from embedchain.vectordb.base import BaseVectorDB
 
@@ -108,6 +109,7 @@ class EmbedChain(JSONSerializable):
     def add(
         self,
         source: Any,
+        observer: Observer,
         data_type: Optional[DataType] = None,
         metadata: Optional[dict[str, Any]] = None,
         config: Optional[AddConfig] = None,
@@ -174,7 +176,7 @@ class EmbedChain(JSONSerializable):
 
         data_formatter = DataFormatter(data_type, config, loader, chunker)
         documents, metadatas, _ids, new_chunks = self._load_and_embed(
-            data_formatter.loader, data_formatter.chunker, source, metadata, source_hash, config, dry_run, **kwargs
+            data_formatter.loader, data_formatter.chunker, source, metadata, source_hash, config, dry_run, observer=observer, **kwargs
         )
         print('Source from here:', source)
         if data_type in {DataType.DOCS_SITE}:
@@ -192,9 +194,11 @@ class EmbedChain(JSONSerializable):
         )
         try:
             self.db_session.commit()
+            observer.update_completed(source=str(source))
         except Exception as e:
             logger.error(f"Error adding data source: {e}")
             self.db_session.rollback()
+            observer.update_failed(source=str(source))
 
         if dry_run:
             data_chunks_info = {"chunks": documents, "metadata": metadatas, "count": len(documents), "type": data_type}
@@ -280,6 +284,7 @@ class EmbedChain(JSONSerializable):
         loader: BaseLoader,
         chunker: BaseChunker,
         src: Any,
+        observer: Observer,
         metadata: Optional[dict[str, Any]] = None,
         source_hash: Optional[str] = None,
         add_config: Optional[AddConfig] = None,
@@ -387,7 +392,9 @@ class EmbedChain(JSONSerializable):
             try:
                 # Add only valid batches
                 if batch_docs:
-                    self.db.add(documents=batch_docs, metadatas=batch_meta, ids=batch_ids, **kwargs)
+                    self.db.add(documents=batch_docs, metadatas=batch_meta, 
+                                ids=batch_ids, src=src, observer=observer, 
+                                **kwargs)
             except Exception as e:
                 print(f"Failed to add batch due to a bad request: {e}")
                 # Handle the error, e.g., by logging, retrying, or skipping
