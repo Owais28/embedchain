@@ -28,7 +28,7 @@ class BaseVectorDB(JSONSerializable):
         Set observer
         """
         self.observer = observer
-        raise NotImplementedError
+
     def _get_or_create_db(self):
         """Get or create the database."""
         raise NotImplementedError

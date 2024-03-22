@@ -146,6 +146,7 @@ class App(EmbedChain):
         Initialize the database.
         """
         self.db._set_embedder(self.embedding_model)
+        self.db._set_observer(self.observer)
         self.db._initialize()
         self.db.set_collection_name(self.db.config.collection_name)
 

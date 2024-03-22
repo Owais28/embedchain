@@ -50,6 +50,9 @@ class QdrantDB(BaseVectorDB):
         """
         if not self.embedder:
             raise ValueError("Embedder not set. Please set an embedder with `set_embedder` before initialization.")
+        
+        if not self.observer:
+            raise ValueError("Observer not set. Please set an embedder with `observer_embedder` before initialization.")
 
         self.collection_name = self._get_or_create_collection()
         all_collections = self.client.get_collections()
