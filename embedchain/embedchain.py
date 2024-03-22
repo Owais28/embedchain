@@ -33,6 +33,7 @@ class EmbedChain(JSONSerializable):
     def __init__(
         self,
         config: BaseAppConfig,
+        observer: Observer,
         llm: BaseLlm,
         db: BaseVectorDB = None,
         embedder: BaseEmbedder = None,
@@ -66,9 +67,11 @@ class EmbedChain(JSONSerializable):
         if embedder is None:
             raise ValueError("App requires Embedder.")
         self.embedder = embedder
+        self.observer = observer
 
         # Initialize database
         self.db._set_embedder(self.embedder)
+        self.db._set_observer(self.observer)
         self.db._initialize()
         # Set collection name from app config for backwards compatibility.
         if config.collection_name:
@@ -109,7 +112,6 @@ class EmbedChain(JSONSerializable):
     def add(
         self,
         source: Any,
-        observer: Observer,
         data_type: Optional[DataType] = None,
         metadata: Optional[dict[str, Any]] = None,
         config: Optional[AddConfig] = None,
@@ -176,7 +178,7 @@ class EmbedChain(JSONSerializable):
 
         data_formatter = DataFormatter(data_type, config, loader, chunker)
         documents, metadatas, _ids, new_chunks = self._load_and_embed(
-            data_formatter.loader, data_formatter.chunker, source, metadata, source_hash, config, dry_run, observer=observer, **kwargs
+            loader=data_formatter.loader, chunker=data_formatter.chunker, src=source, metadata=metadata, source_hash=source_hash, add_config=config,dry_run=dry_run, observer=self.observer , **kwargs
         )
         print('Source from here:', source)
         if data_type in {DataType.DOCS_SITE}:
@@ -194,11 +196,11 @@ class EmbedChain(JSONSerializable):
         )
         try:
             self.db_session.commit()
-            observer.update_completed(source=str(source))
+            self.observer.update_completed(source=str(source))
         except Exception as e:
             logger.error(f"Error adding data source: {e}")
             self.db_session.rollback()
-            observer.update_failed(source=str(source))
+            self.observer.update_failed(source=str(source))
 
         if dry_run:
             data_chunks_info = {"chunks": documents, "metadata": metadatas, "count": len(documents), "type": data_type}
@@ -284,7 +286,7 @@ class EmbedChain(JSONSerializable):
         loader: BaseLoader,
         chunker: BaseChunker,
         src: Any,
-        observer: Observer,
+        observer: Optional[Observer] = None,
         metadata: Optional[dict[str, Any]] = None,
         source_hash: Optional[str] = None,
         add_config: Optional[AddConfig] = None,

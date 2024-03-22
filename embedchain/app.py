@@ -35,7 +35,7 @@ from embedchain.utils.evaluation import EvalData, EvalMetric
 from embedchain.utils.misc import validate_config
 from embedchain.vectordb.base import BaseVectorDB
 from embedchain.vectordb.chroma import ChromaDB
-
+from embedchain.observer import Observer
 logger = logging.getLogger(__name__)
 
 
@@ -60,6 +60,7 @@ class App(EmbedChain):
         chunker: ChunkerConfig = None,
         cache_config: CacheConfig = None,
         log_level: int = logging.WARN,
+        observer: Observer = None
     ):
         """
         Initialize a new `App` instance.
@@ -99,7 +100,7 @@ class App(EmbedChain):
         self.id = None
         self.chunker = ChunkerConfig(**chunker) if chunker else None
         self.cache_config = cache_config
-
+        
         self.config = config or AppConfig()
         self.name = self.config.name
         self.config.id = self.local_id = "default-app-id" if self.config.id is None else self.config.id
@@ -114,7 +115,11 @@ class App(EmbedChain):
 
         if name is not None:
             self.name = name
-
+        
+        if observer is None:
+            raise Exception("Provide observer to App")
+        self.observer = observer
+        
         self.embedding_model = embedding_model or OpenAIEmbedder()
         self.db = db or ChromaDB()
         self.llm = llm or OpenAILlm()
@@ -322,6 +327,7 @@ class App(EmbedChain):
         config: Optional[dict[str, Any]] = None,
         auto_deploy: bool = False,
         yaml_path: Optional[str] = None,
+        observer: Observer = None
     ):
         """
         Instantiate a App object from a configuration.
@@ -407,6 +413,7 @@ class App(EmbedChain):
             auto_deploy=auto_deploy,
             chunker=chunker_config_data,
             cache_config=cache_config,
+            observer=observer
         )
 
     def _eval(self, dataset: list[EvalData], metric: Union[BaseMetric, str]):

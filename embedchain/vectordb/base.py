@@ -1,6 +1,7 @@
 from embedchain.config.vectordb.base import BaseVectorDbConfig
 from embedchain.embedder.base import BaseEmbedder
 from embedchain.helpers.json_serializable import JSONSerializable
+from embedchain.observer import Observer
 
 
 class BaseVectorDB(JSONSerializable):
@@ -22,7 +23,12 @@ class BaseVectorDB(JSONSerializable):
         So it's can't be done in __init__ in one step.
         """
         raise NotImplementedError
-
+    def _set_observer(self, observer: Observer):
+        """
+        Set observer
+        """
+        self.observer = observer
+        raise NotImplementedError
     def _get_or_create_db(self):
         """Get or create the database."""
         raise NotImplementedError
