@@ -154,7 +154,7 @@ class QdrantDB(BaseVectorDB):
             payloads.append({"identifier": id, "text": document, "metadata": copy.deepcopy(metadata)})
 
         for i in tqdm(range(0, len(qdrant_ids), self.BATCH_SIZE), desc="Adding data in batches"):
-            observer.update_progress(str(src), i+1)  # Update observer with integer 
+            observer.update_progress(str(src), i+1, len(qdrant_ids))  # Update observer with integer 
             self.client.upsert(
                 collection_name=self.collection_name,
                 points=Batch(
